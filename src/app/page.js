@@ -1,95 +1,64 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+import { useState } from 'react';
+import axios from 'axios';
 
 export default function Home() {
+  const [query, setQuery] = useState('');
+  const [responses, setResponses] = useState([]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prompt: query }) // Ensure that 'prompt' matches the API expectation
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setResponses([...responses, { query, response: data.output }]);
+      } else {
+        setResponses([...responses, { query, response: data.error }]);
+      }
+    } catch (error) {
+      console.error('Error submitting query:', error);
+      setResponses([...responses, { query, response: 'Error submitting query' }]);
+    }
+    
+    setQuery('');
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw' , background: 'linear-gradient(90deg, rgba(196,174,238,1) 0%, rgba(148,183,233,1) 48%)', margin:'-10px', padding: '0px'}}>
+      <h1 style={{color:'white'}}>ChatBot</h1>
+      <div style={{ width: '100%', maxWidth: '600px' }}>
+        {responses.map((res, index) => (
+          <div key={index} style={{ marginBottom: '10px' }}>
+            <p><strong>You:</strong> {res.query}</p>
+            <input 
+              type="text" 
+              value={res.response} 
+              readOnly 
+              style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}
             />
-          </a>
-        </div>
+          </div>
+        ))}
       </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+      <form onSubmit={handleSubmit} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px' }}>
+        <input 
+          type="text" 
+          value={query} 
+          onChange={(e) => setQuery(e.target.value)} 
+          placeholder="Ask something..." 
+          style={{ marginRight: '10px' }}
         />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+        <button type="submit">Send</button>
+      </form>
+    </div>
   );
 }
